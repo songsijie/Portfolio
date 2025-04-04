@@ -1,6 +1,8 @@
 {
   "name": "portfolio",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "个人作品集网站",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "dev": "astro dev",
@@ -9,7 +11,11 @@
     "preview": "astro preview",
     "astro": "astro"
   },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
+    "firebase": "^10.5.0",
     "@astrojs/react": "^4.2.2",
     "@astrojs/tailwind": "^6.0.2",
     "astro": "^5.5.5",
