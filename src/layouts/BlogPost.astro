@@ -1,0 +1,142 @@
+---
+import Layout from "./Layout.astro";
+import Nav from "../components/nav.astro";
+import Footer from "../components/footer.astro";
+
+const { frontmatter } = Astro.props;
+---
+
+<Layout title={frontmatter.title}>
+  <Nav />
+  <div class="py-12 max-w-4xl mx-auto px-4">
+    <div class="mb-10">
+      <p class="text-[var(--sec)] text-sm mb-2">
+        {
+          new Date(frontmatter.publishDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        } · {frontmatter.author}
+      </p>
+      <h1 class="text-4xl md:text-5xl font-bold text-[var(--white)] mb-4">
+        {frontmatter.title}
+      </h1>
+      <p class="text-[var(--white-icon)] text-xl mb-6">
+        {frontmatter.description}
+      </p>
+      <div class="flex flex-wrap gap-2 mb-8">
+        {
+          frontmatter.tags.map((tag) => (
+            <span class="bg-[#ffffff10] text-sm px-3 py-1 rounded-full text-[var(--white-icon)]">
+              {tag}
+            </span>
+          ))
+        }
+      </div>
+      {
+        frontmatter.coverImage && (
+          <img
+            src={frontmatter.coverImage}
+            alt={frontmatter.title}
+            class="w-full h-auto max-h-96 object-cover rounded-xl mb-10"
+          />
+        )
+      }
+    </div>
+    <article class="prose prose-invert prose-lg max-w-none">
+      <slot />
+    </article>
+    <div class="mt-12 pt-6 border-t border-[#ffffff10]">
+      <a
+        href="/blog"
+        class="inline-flex items-center text-[var(--sec)] hover:underline"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-2"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M7.82843 10.9999H20V12.9999H7.82843L13.1924 18.3638L11.7782 19.778L4 11.9999L11.7782 4.22168L13.1924 5.63589L7.82843 10.9999Z" />
+        </svg>
+        Back to all posts
+      </a>
+    </div>
+  </div>
+  <Footer />
+</Layout>
+
+<style is:global>
+  .prose {
+    color: var(--white-icon);
+  }
+  
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    color: var(--white);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .prose h1 {
+    font-size: 2.25rem;
+  }
+  
+  .prose h2 {
+    font-size: 1.875rem;
+  }
+  
+  .prose h3 {
+    font-size: 1.5rem;
+  }
+  
+  .prose a {
+    color: var(--sec);
+    text-decoration: underline;
+  }
+  
+  .prose p {
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose ul, .prose ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+  
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose code {
+    background: #2a2a2a;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+  }
+  
+  .prose pre {
+    background: #1e1e1e;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose blockquote {
+    border-left: 4px solid var(--sec);
+    padding-left: 1rem;
+    font-style: italic;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose img {
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+  }
+</style>

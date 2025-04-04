@@ -1,0 +1,92 @@
+---
+// 添加方向参数，默认从右往左滚动
+export interface Props {
+  direction?: 'right' | 'left';
+}
+
+const { direction = 'right' } = Astro.props;
+
+const technologies = [
+  "astro",
+  "vue",
+  "react",
+  "typeScript",
+  "tailwindcss",
+  "next",
+  "nodejs",
+  "HTML5",
+  "CSS3",
+  "javaScript",
+  "git",
+  "supabase",
+  "mysql",
+  "bash",
+];
+---
+
+<div class="relative overflow-x-hidden py-8">
+  <div
+    class="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[var(--background)] to-transparent z-20"
+  >
+  </div>
+  <div
+    class="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--background)] to-transparent z-20"
+  >
+  </div>
+
+  <div class={`flex hover:animate-paused gap-12 md:gap-20 w-max ${direction === 'right' ? 'animate-scroll-right' : 'animate-scroll-left'}`}>
+    {
+      [...technologies, ...technologies, ...technologies].map((tech) => (
+        <div class="flex items-center gap-2 group transition-all duration-300">
+          <img
+            src={`/svg/${tech}.svg`}
+            alt={tech}
+            class="h-7 w-auto object-contain transition-transform group-hover:scale-110 opacity-60"
+            width="30"
+            height="30"
+            loading="lazy"
+          />
+          <span class="text-lg font-medium text-[var(--white-icon)]">
+            {tech.charAt(0).toUpperCase() + tech.slice(1)}
+          </span>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style is:global>
+  /* 从右到左滚动（默认） */
+  @keyframes scroll-right {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  
+  /* 从左到右滚动 */
+  @keyframes scroll-left {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-scroll-right {
+    animation: scroll-right 60s linear infinite;
+  }
+  
+  .animate-scroll-left {
+    animation: scroll-left 60s linear infinite;
+  }
+
+  @media (min-width: 768px) {
+    .animate-scroll-right, .animate-scroll-left {
+      animation-duration: 50s;
+    }
+  }
+</style>

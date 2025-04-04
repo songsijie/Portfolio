@@ -1,0 +1,282 @@
+---
+import { getCollection } from "astro:content";
+
+// 获取所有博客文章，添加错误处理
+let blogPosts = [];
+let sortedPosts = [];
+let recentPosts = [];
+let totalPosts = 0;
+
+try {
+  blogPosts = await getCollection("blog");
+  
+  if (blogPosts.length > 0) {
+    sortedPosts = blogPosts.sort((a, b) => 
+      new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf()
+    );
+    
+    // 显示最新的6篇文章，而不是4篇
+    recentPosts = sortedPosts.slice(0, 6);
+    totalPosts = sortedPosts.length;
+  }
+} catch (error) {
+  console.error("加载博客文章时出错:", error);
+}
+
+// 支持多种图片格式的封面图片路径获取函数
+function getCoverImagePath(slug: string) {
+  // 定义支持的图片格式，按优先级排序
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'svg'];
+  
+  return `/images/blog/${slug}.${imageExtensions[0]}`;
+}
+
+// 默认封面图片路径
+const defaultCoverImage = "/images/blog/default-blog.jpg";
+
+// 改进的图片错误处理函数（客户端脚本）- 减少闪烁
+const imageErrorScript = `
+  // 预加载默认图片
+  (function() {
+    const preloadDefaultImg = new Image();
+    preloadDefaultImg.src = '${defaultCoverImage}';
+  })();
+
+  // 创建图片加载缓存，避免重复尝试已失败的格式
+  const imageLoadCache = {};
+  
+  function tryLoadImage(img, slug) {
+    // 如果已缓存了该slug的结果，直接使用
+    if (imageLoadCache[slug]) {
+      img.src = imageLoadCache[slug];
+      return;
+    }
+    
+    // 设置占位图样式，在加载时显示渐变背景而不是空白
+    img.style.background = 'linear-gradient(to right, #1e1e1e, #2a2a2a)';
+    
+    const extensions = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'svg'];
+    
+    // 隐藏图片直到找到有效图片
+    img.style.visibility = 'hidden';
+    
+    // 预检测可用的图片格式
+    async function findValidImage() {
+      // 首先检查是否有显式设置的封面图片
+      if (img.dataset.explicitCover) {
+        try {
+          await checkImage(img.dataset.explicitCover);
+          imageLoadCache[slug] = img.dataset.explicitCover;
+          img.src = img.dataset.explicitCover;
+          img.style.visibility = 'visible';
+          return;
+        } catch (e) {
+          // 明确设置的封面图不存在，继续尝试其他格式
+        }
+      }
+      
+      // 测试每种可能的图片格式
+      for (const ext of extensions) {
+        const url = \`/images/blog/\${slug}.\${ext}\`;
+        try {
+          await checkImage(url);
+          imageLoadCache[slug] = url;
+          img.src = url;
+          img.style.visibility = 'visible';
+          return;
+        } catch (e) {
+          // 继续尝试下一个格式
+        }
+      }
+      
+      // 所有格式都失败，使用默认图片
+      imageLoadCache[slug] = '${defaultCoverImage}';
+      img.src = '${defaultCoverImage}';
+      img.style.visibility = 'visible';
+    }
+    
+    // 检查图片是否可加载
+    function checkImage(url) {
+      return new Promise((resolve, reject) => {
+        const testImg = new Image();
+        testImg.onload = () => resolve(url);
+        testImg.onerror = () => reject();
+        testImg.src = url;
+      });
+    }
+    
+    // 开始检测过程
+    findValidImage();
+  }
+  
+  // 当页面加载完成后，应用统一的高度处理
+  document.addEventListener('DOMContentLoaded', () => {
+    // 延迟执行以确保所有图片都已加载或处理完毕
+    setTimeout(() => {
+      const imgContainers = document.querySelectorAll('.blog-img-container');
+      imgContainers.forEach(container => {
+        container.style.minHeight = '160px'; // 确保即使图片加载失败也保持最小高度
+      });
+    }, 500);
+  });
+`;
+---
+
+<section
+  id="blogs"
+  class="py-12 border-t border-[#ffffff10] text-[var(--white)]"
+>
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-lg text-[var(--sec)] mb-2 shiny-sec">My Blog</h2>
+    <h3 class="text-4xl md:text-5xl font-medium mb-8">Recent Posts</h3>
+
+    {totalPosts === 0 ? (
+      <div class="text-center p-8 bg-[#1414149c] rounded-2xl border border-[var(--white-icon-tr)]">
+        <p class="text-[var(--white-icon)] text-lg">暂无博客文章</p>
+        <p class="text-[var(--white-icon)] mt-2">请确认您已创建博客内容并放置在正确的目录中</p>
+        <p class="text-[var(--sec)] mt-4 text-sm">提示: 检查 src/content/blog 目录是否存在并包含 Markdown 文件</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          recentPosts.map((post) => {
+            // 优先使用文章中指定的封面图片，否则根据slug查找，如果都不存在则使用默认图片
+            const coverImage = post.data.coverImage || getCoverImagePath(post.slug);
+            return (
+              <a href={`/blog/${post.slug}`} class="group">
+                <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4 bg-[#1414149c] border border-[var(--white-icon-tr)] h-full flex flex-col">
+                  <div class="relative overflow-hidden h-40 blog-img-container bg-gradient-to-r from-[#1e1e1e] to-[#2a2a2a]">
+                    <img
+                      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+                      alt={post.data.title}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      data-slug={post.slug}
+                      data-explicit-cover={post.data.coverImage || ""}
+                      onload="this.classList.add('loaded')"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="p-4 flex-grow flex flex-col">
+                    <p class="text-[var(--sec)] text-xs mb-1">
+                      {new Date(post.data.publishDate).toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                    <h4 class="text-lg font-semibold mb-2 group-hover:text-[var(--sec)] transition-colors duration-300 line-clamp-2">
+                      {post.data.title}
+                    </h4>
+                    <p class="text-[var(--white-icon)] mb-3 text-sm line-clamp-2 flex-grow">
+                      {post.data.description}
+                    </p>
+                    <div class="flex flex-wrap gap-1 mt-auto max-w-full tag-container">
+                      {post.data.tags.slice(0, 4).map((tag, index) => (
+                        <span class="bg-[#ffffff10] text-xs px-2 py-0.5 rounded-full text-[var(--white-icon)] tag-item">
+                          {tag}
+                        </span>
+                      ))}
+                      {post.data.tags.length > 4 && (
+                        <span class="bg-[#ffffff10] text-xs px-2 py-0.5 rounded-full text-[var(--white-icon)] tag-item">
+                          +{post.data.tags.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            );
+          })
+        }
+      </div>
+    )}
+    
+    {totalPosts > 0 && (
+      <>
+        <div class="text-center mt-6 mb-4 text-[var(--white-icon)]">
+          <p>显示最新的 {recentPosts.length} 篇文章，共有 {totalPosts} 篇</p>
+        </div>
+        
+        <a
+          href="/blog"
+          class="w-full flex items-center justify-center gap-2 mt-4 text-[var(--white-icon)] hover:text-white transition duration-300 ease-in-out border border-[var(--white-icon-tr)] p-3 rounded-full bg-[#1414149c] hover:bg-[var(--white-icon-tr)]"
+        >
+          <span class="md:text-lg text-md">查看全部文章</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="w-5 h-5"
+          >
+            <path d="M16.0037 9.41421L7.39712 18.0208L5.98291 16.6066L14.5895 8H7.00373V6H18.0037V17H16.0037V9.41421Z"></path>
+          </svg>
+        </a>
+      </>
+    )}
+  </div>
+</section>
+
+<script set:html={imageErrorScript}></script>
+
+<script>
+  // 页面加载完成后处理所有图片
+  document.addEventListener('DOMContentLoaded', () => {
+    const allImages = document.querySelectorAll('img[data-slug]');
+    allImages.forEach(img => {
+      if (typeof tryLoadImage === 'function') {
+        tryLoadImage(img, img.dataset.slug);
+      }
+    });
+  });
+</script>
+
+<style>
+  /* 图片加载过渡效果 */
+  img[data-slug] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  img[data-slug].loaded {
+    opacity: 1;
+  }
+  
+  /* 图片容器的闪烁渐变样式 */
+  .blog-img-container {
+    position: relative;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 100% 0;
+    }
+  }
+  
+  /* 标签容器样式 */
+  .tag-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    padding-bottom: 4px;
+    margin-bottom: -4px;
+  }
+  
+  /* 隐藏滚动条 */
+  .tag-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* 标签项目样式 */
+  .tag-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+</style>

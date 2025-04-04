@@ -1,0 +1,330 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+// 获取动态路由参数
+export async function getStaticPaths() {
+  const blogEntries = await getCollection('blog');
+  return blogEntries.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+// 获取特定的博客条目
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+// 支持多种图片格式的封面图片路径获取函数
+function getCoverImagePath(slug: string) {
+  // 定义支持的图片格式，按优先级排序
+  const imageExtensions = ['jpg', 'png', 'webp', 'gif', 'svg'];
+  
+  // 由于我们无法在构建时确认文件是否存在，所以我们只能返回第一个格式作为默认值
+  return `/images/blog/${slug}.${imageExtensions[0]}`;
+}
+
+// 默认封面图片路径
+const defaultCoverImage = "/images/blog/default-blog.jpg";
+
+// 使用显式指定的封面图片或基于slug的封面图片
+const coverImage = entry.data.coverImage || getCoverImagePath(entry.slug);
+
+// 改进的图片错误处理函数（客户端脚本）- 减少闪烁
+const imageErrorScript = `
+  // 预加载默认图片
+  (function() {
+    const preloadDefaultImg = new Image();
+    preloadDefaultImg.src = '${defaultCoverImage}';
+  })();
+
+  // 创建图片加载缓存，避免重复尝试已失败的格式
+  const imageLoadCache = {};
+  
+  function tryLoadImage(img, slug) {
+    // 如果已缓存了该slug的结果，直接使用
+    if (imageLoadCache[slug]) {
+      img.src = imageLoadCache[slug];
+      return;
+    }
+    
+    // 设置占位图样式，在加载时显示渐变背景而不是空白
+    img.style.background = 'linear-gradient(to right, #1e1e1e, #2a2a2a)';
+    
+    const extensions = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'svg'];
+    
+    // 隐藏图片直到找到有效图片
+    img.style.visibility = 'hidden';
+    
+    // 预检测可用的图片格式
+    async function findValidImage() {
+      // 首先检查是否有显式设置的封面图片
+      if (img.dataset.explicitCover) {
+        try {
+          await checkImage(img.dataset.explicitCover);
+          imageLoadCache[slug] = img.dataset.explicitCover;
+          img.src = img.dataset.explicitCover;
+          img.style.visibility = 'visible';
+          return;
+        } catch (e) {
+          // 明确设置的封面图不存在，继续尝试其他格式
+        }
+      }
+      
+      // 测试每种可能的图片格式
+      for (const ext of extensions) {
+        const url = \`/images/blog/\${slug}.\${ext}\`;
+        try {
+          await checkImage(url);
+          imageLoadCache[slug] = url;
+          img.src = url;
+          img.style.visibility = 'visible';
+          return;
+        } catch (e) {
+          // 继续尝试下一个格式
+        }
+      }
+      
+      // 所有格式都失败，使用默认图片
+      imageLoadCache[slug] = '${defaultCoverImage}';
+      img.src = '${defaultCoverImage}';
+      img.style.visibility = 'visible';
+    }
+    
+    // 检查图片是否可加载
+    function checkImage(url) {
+      return new Promise((resolve, reject) => {
+        const testImg = new Image();
+        testImg.onload = () => resolve(url);
+        testImg.onerror = () => reject();
+        testImg.src = url;
+      });
+    }
+    
+    // 开始检测过程
+    findValidImage();
+  }
+`;
+
+// 格式化日期
+const formattedDate = new Date(entry.data.publishDate).toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+---
+
+<Layout title={`${entry.data.title} | 博客`}>
+  <main class="py-12 px-4">
+    <article class="max-w-4xl mx-auto">
+      <!-- 文章头部 -->
+      <header class="mb-10 text-center">
+        <div class="mb-4">
+          <a href="/blog" class="text-[var(--sec)] hover:text-[var(--sec-light)] transition-colors flex items-center justify-center gap-2 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path d="M7.82843 10.9999H20V12.9999H7.82843L13.1924 18.3638L11.7782 19.778L4 11.9999L11.7782 4.22168L13.1924 5.63589L7.82843 10.9999Z"></path>
+            </svg>
+            <span>返回博客列表</span>
+          </a>
+        </div>
+        
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-[var(--white)]">{entry.data.title}</h1>
+        
+        <p class="text-[var(--sec)] mb-4">{formattedDate}</p>
+        
+        <div class="flex nowrap overflow-x-auto justify-center gap-2 mb-6 tag-container">
+          {entry.data.tags.map((tag: string) => (
+            <span class="bg-[#ffffff10] text-sm px-3 py-1 rounded-full text-[var(--white-icon)] tag-item">
+              {tag}
+            </span>
+          ))}
+        </div>
+        
+        <div class="rounded-2xl overflow-hidden mb-10 max-h-[500px] blog-img-container bg-gradient-to-r from-[#1e1e1e] to-[#2a2a2a]">
+          <img 
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+            alt={entry.data.title}
+            class="w-full object-cover"
+            data-slug={entry.slug}
+            data-explicit-cover={entry.data.coverImage || ""}
+            onload="this.classList.add('loaded')"
+            loading="lazy"
+          />
+        </div>
+      </header>
+      
+      <!-- 文章内容 -->
+      <div class="prose prose-invert prose-lg max-w-none text-[var(--white)]">
+        <Content />
+      </div>
+    </article>
+    
+    <!-- 返回博客列表按钮 -->
+    <div class="max-w-4xl mx-auto mt-16 text-center">
+      <a
+        href="/blog"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1414149c] border border-[var(--white-icon-tr)] text-[var(--white-icon)] hover:text-white transition duration-300"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <path d="M7.82843 10.9999H20V12.9999H7.82843L13.1924 18.3638L11.7782 19.778L4 11.9999L11.7782 4.22168L13.1924 5.63589L7.82843 10.9999Z"></path>
+        </svg>
+        <span>返回博客列表</span>
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<script set:html={imageErrorScript}></script>
+
+<script>
+  // 页面加载完成后处理所有图片
+  document.addEventListener('DOMContentLoaded', () => {
+    const allImages = document.querySelectorAll('img[data-slug]');
+    allImages.forEach(img => {
+      if (typeof tryLoadImage === 'function') {
+        tryLoadImage(img, img.dataset.slug);
+      }
+    });
+  });
+</script>
+
+<style>
+  /* 图片加载过渡效果 */
+  img[data-slug] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  img[data-slug].loaded {
+    opacity: 1;
+  }
+  
+  /* 图片容器的闪烁渐变样式 */
+  .blog-img-container {
+    position: relative;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 100% 0;
+    }
+  }
+  
+  /* 标签容器样式 */
+  .tag-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    padding-bottom: 4px;
+    margin-bottom: -4px;
+  }
+  
+  /* 隐藏滚动条 */
+  .tag-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* 标签项目样式 */
+  .tag-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+</style>
+
+<style is:global>
+  /* 增强Markdown内容的样式 */
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    color: var(--white);
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+  }
+  
+  .prose h1 {
+    font-size: 2.5em;
+  }
+  
+  .prose h2 {
+    font-size: 1.8em;
+    border-bottom: 1px solid #ffffff20;
+    padding-bottom: 0.3em;
+  }
+  
+  .prose h3 {
+    font-size: 1.4em;
+  }
+  
+  .prose p {
+    margin-bottom: 1.2em;
+    line-height: 1.7;
+  }
+  
+  .prose ul, .prose ol {
+    margin-left: 1.5em;
+    margin-bottom: 1.2em;
+  }
+  
+  .prose li {
+    margin-bottom: 0.5em;
+  }
+  
+  .prose code {
+    background-color: #ffffff15;
+    padding: 0.2em 0.4em;
+    border-radius: 0.3em;
+    font-size: 0.9em;
+  }
+  
+  .prose pre {
+    background-color: #1e1e1e;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  
+  .prose a {
+    color: var(--sec);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  
+  .prose a:hover {
+    color: var(--accent);
+  }
+  
+  .prose blockquote {
+    border-left: 4px solid var(--sec);
+    padding-left: 1em;
+    font-style: italic;
+    color: var(--white-icon);
+  }
+  
+  .prose img {
+    margin: 2em auto;
+    border-radius: 0.5em;
+    max-width: 100%;
+  }
+  
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2em 0;
+  }
+  
+  .prose th, .prose td {
+    border: 1px solid #ffffff20;
+    padding: 0.5em 1em;
+  }
+  
+  .prose th {
+    background-color: #ffffff10;
+  }
+</style>
