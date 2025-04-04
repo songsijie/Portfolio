@@ -1,15 +1,16 @@
-name: Deploy to Server
+name: Deploy Website
 
 on:
   push:
     branches:
-      - main  # 或使用您的主分支名称，如master
+      - main  # 当推送到main分支时触发
+  workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -21,41 +22,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
+      - name: Build website
         run: npm run build
 
       - name: Deploy to server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            cd /var/www/portfolio
-            rm -rf ./*
-            # 创建临时目录接收文件
-            mkdir -p /tmp/deploy_temp
-            
-      - name: Copy files to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "dist/"
-          target: "/tmp/deploy_temp"
-          
-      - name: Finalize deployment
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            cp -r /tmp/deploy_temp/dist/* /var/www/portfolio/
-            rm -rf /tmp/deploy_temp
-            # 如果您使用Nginx等服务器，可能需要重启
-            # sudo systemctl reload nginx
+          source: "dist/*"
+          target: "/var/www/portfolio"
+          strip_components: 1
