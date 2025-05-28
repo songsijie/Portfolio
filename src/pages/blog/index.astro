@@ -6,10 +6,17 @@ import { getCollection } from 'astro:content';
 let blogPosts = [];
 
 try {
-  blogPosts = await getCollection('blog');
+  // 获取所有博客文章，包括未来日期的文章
+  blogPosts = await getCollection('blog', ({ data }) => {
+    return true; // 返回所有文章，不考虑发布日期
+  });
+  
   blogPosts = blogPosts.sort((a, b) => 
     new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf()
   );
+  
+  // 在控制台输出所有文章数量，帮助调试
+  console.log(`找到 ${blogPosts.length} 篇博客文章`);
 } catch (error) {
   console.error("加载博客文章时出错:", error);
 }
