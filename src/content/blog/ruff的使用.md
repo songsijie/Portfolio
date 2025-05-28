@@ -1,12 +1,12 @@
 ---
-title: "Ruff：Python代码工具"
-description: "Ruff：Python代码工具"
+title: "Ruff：Python代码格式化工具"
+description: "Ruff：Python代码格式化工具"
 publishDate: 2025-05-22
 tags: ["python", "代码格式化工具"]
 ---
 
 
-# Ruff：Python代码工具
+# Ruff：Python代码格式化工具
 
 ## 什么是Ruff？
 
