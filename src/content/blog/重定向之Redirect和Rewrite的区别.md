@@ -1,7 +1,7 @@
 ---
 title: "重定向之Redirect和Rewrite的区别"
 description: "深入解析Web服务器中Redirect和Rewrite的技术原理与使用场景"
-publishDate: 2024-01-15
+publishDate: 2025-09-10
 tags: ["运维", "Web服务器", "重定向", "URL重写", "Nginx", "Apache"]
 ---
 
