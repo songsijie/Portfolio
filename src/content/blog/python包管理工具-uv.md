@@ -1,7 +1,7 @@
 ---
 title: "Python包管理工具uv：下一代Python包管理器的革命"
 description: "深入了解uv这个由Rust编写的超快Python包管理器，它如何改变Python开发者的工作流程"
-pubDate: 2025-09-10
+publishDate: 2025-09-10
 author: "Portfolio"
 heroImage: "/images/blog/default-blog.jpg"
 tags: ["Python", "包管理", "工具", "开发效率"]
