@@ -1,7 +1,7 @@
 ---
 title: "SQLAlchemy中的外键关联"
 description: "深入解析SQLAlchemy中的外键关联、relationship关系映射和各种关联类型的实现"
-publishDate: 2024-08-20
+publishDate: 2025-09-20
 tags: ["Python", "SQLAlchemy", "ORM", "数据库", "外键", "关系映射"]
 ---
 
