@@ -1,8 +1,8 @@
 ---
 title: 'Kafka配置详解：LISTENERS 与 ADVERTISED_LISTENERS 的区别'
 description: '深入理解 Kafka 中 LISTENERS 和 ADVERTISED_LISTENERS 配置的区别、作用及常见问题解决方案'
-pubDate: 'Oct 22 2024'
-heroImage: '/images/blog/default-blog.jpg'
+publishDate: 2025-10-22
+tags: ["kafka","KAFKA_LISTENERS", "KAFKA_ADVERTISED_LISTENERS", "broker"]
 ---
 
 ## 概述
