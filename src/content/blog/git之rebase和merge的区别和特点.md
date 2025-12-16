@@ -1,7 +1,7 @@
 ---
 title: "Git之Rebase和Merge的区别和特点"
 description: "深入解析Git中rebase和merge的工作原理、使用场景和最佳实践"
-publishDate: 2024-05-10
+pubDate: 2024-05-10
 tags: ["Git", "版本控制", "Rebase", "Merge", "工作流"]
 ---
 

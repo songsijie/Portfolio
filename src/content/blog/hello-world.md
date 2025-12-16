@@ -1,7 +1,7 @@
 ---
 title: "Hello World - 我的第一篇博客"
 description: "这是我的第一篇博客文章，介绍了我的个人网站和即将分享的内容。"
-publishDate: 2023-10-15
+pubDate: 2023-10-15
 tags: ["博客", "介绍", "个人网站"]
 ---
 

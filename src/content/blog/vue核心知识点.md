@@ -1,7 +1,7 @@
 ---
 title: "Vue 3 核心知识点：深入理解现代前端框架"
 description: "全面讲解 Vue 3 的核心概念、响应式系统、Composition API、组件化开发和最佳实践，帮助你掌握现代前端开发"
-publishDate: 2025-11-10
+pubDate: 2025-11-10
 tags: ["Vue", "Vue3", "前端框架", "JavaScript", "Composition API"]
 ---
 

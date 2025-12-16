@@ -1,7 +1,7 @@
 ---
 title: "英语词性中vi,vt的区别"
 description: "对vi,vt进行简单解释"
-publishDate: 2023-10-15
+pubDate: 2023-10-15
 tags: ["英语", "词性", "及物动词", "不及物动词"]
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Python事件循环与asyncio中run和create_task的区别"
 description: "深入理解Python异步编程的核心概念，详解事件循环机制以及asyncio.run()与create_task()的使用场景和区别"
-publishDate: 2025-10-21
+pubDate: 2025-10-21
 tags: ["Python", "asyncio", "异步编程", "事件循环", "并发"]
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Redis之Zset数据结构：有序集合的深度解析"
 description: "深入解析Redis的Zset（有序集合）数据结构，包括底层实现、使用场景、性能优化和实战案例"
-publishDate: 2025-10-20
+pubDate: 2025-10-20
 tags: ["Redis", "数据结构", "Zset", "性能优化", "后端开发"]
 ---
 

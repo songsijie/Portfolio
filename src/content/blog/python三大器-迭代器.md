@@ -1,7 +1,7 @@
 ---
 title: "Python三大器之迭代器：深入理解迭代器协议"
 description: "详细讲解Python迭代器的概念、特点、实现方式和应用场景，帮助你掌握Python的迭代机制"
-publishDate: 2025-10-18
+pubDate: 2025-10-18
 tags: ["Python", "迭代器", "编程基础", "数据结构"]
 ---
 

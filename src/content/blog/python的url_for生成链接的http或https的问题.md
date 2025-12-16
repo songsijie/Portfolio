@@ -1,7 +1,7 @@
 ---
 title: "Python中url_for生成链接的HTTP/HTTPS问题详解"
 description: "深入解析FastAPI/Flask中url_for函数生成HTTP还是HTTPS链接的原理，以及如何正确配置反向代理和应用端设置"
-publishDate: 2025-10-09
+pubDate: 2025-10-09
 author: "Portfolio"
 heroImage: "/images/blog/default-blog.jpg"
 tags: ["Python", "FastAPI", "Flask", "HTTPS", "反向代理", "Web开发"]
