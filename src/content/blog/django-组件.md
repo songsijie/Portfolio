@@ -1,7 +1,7 @@
 ---
 title: "精通Django框架：深入理解底层机制"
 description: "全面讲解Django框架的底层机制，包括ORM、中间件、信号、Admin扩展等核心组件的原理与实战应用"
-publishDate: 2025-11-12
+pubDate: 2025-11-12
 tags: ["Django", "Python", "Web框架", "ORM", "中间件", "后端开发"]
 ---
 

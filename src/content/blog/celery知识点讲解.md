@@ -1,7 +1,7 @@
 ---
 title: "Celery完全指南：Python分布式任务队列深度解析"
 description: "全面讲解Celery的核心概念、工作原理、使用场景、配置优化和最佳实践，帮助你掌握Python异步任务处理"
-publishDate: 2025-10-23
+pubDate: 2025-10-23
 tags: ["Python", "Celery", "异步任务", "消息队列", "分布式系统"]
 ---
 

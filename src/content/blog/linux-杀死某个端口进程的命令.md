@@ -1,7 +1,7 @@
 ---
 title: "Linux杀死占用端口的进程"
 description: "快速定位并终止占用端口的进程，包含lsof、netstat、fuser等多种方法和实用技巧"
-publishDate: 2025-08-15
+pubDate: 2025-08-15
 tags: ["Linux", "端口", "进程", "运维"]
 ---
 

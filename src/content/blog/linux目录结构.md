@@ -1,7 +1,7 @@
 ---
 title: "Linux系统目录结构详解"
 description: "详细介绍Linux操作系统中各个目录的功能和用途，帮助初学者理解Linux文件系统"
-publishDate: 2023-10-15
+pubDate: 2023-10-15
 tags: ["Linux","Ubuntu", "系统结构", "技术笔记"]
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Docker 网络模式完全指南"
 description: "深入解析 Docker 的 Bridge、Host、None、Container、Overlay 和 Macvlan 六种网络模式，掌握容器网络通信原理"
-publishDate: 2025-11-11
+pubDate: 2025-11-11
 tags: ["Docker", "网络", "容器", "微服务", "DevOps"]
 ---
 

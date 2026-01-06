@@ -1,7 +1,7 @@
 ---
 title: "Ruff：Python代码格式化工具"
 description: "Ruff：Python代码格式化工具"
-publishDate: 2025-05-22
+pubDate: 2025-05-22
 tags: ["python", "代码格式化工具"]
 ---
 

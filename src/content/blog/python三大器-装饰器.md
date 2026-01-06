@@ -1,7 +1,7 @@
 ---
 title: "Python三大器之装饰器：优雅的函数增强利器"
 description: "全面讲解Python装饰器的原理、使用方法和实战应用，掌握@语法糖和高阶函数的强大功能"
-publishDate: 2025-10-17
+pubDate: 2025-10-17
 tags: ["Python", "装饰器", "编程基础", "设计模式"]
 ---
 

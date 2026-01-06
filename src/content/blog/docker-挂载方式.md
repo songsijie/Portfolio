@@ -1,7 +1,7 @@
 ---
 title: "Docker 三种挂载方式详解"
 description: "深入理解 Docker 的 Volume、Bind Mount 和 tmpfs 三种挂载方式，掌握数据持久化的最佳实践"
-publishDate: 2025-11-11
+pubDate: 2025-11-11
 tags: ["Docker", "容器", "挂载", "数据持久化", "DevOps"]
 ---
 

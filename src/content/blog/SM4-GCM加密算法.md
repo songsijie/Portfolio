@@ -1,7 +1,7 @@
 ---
 title: "SM4-GCM 算法完整总结"
 description: "SM4-GCM（Galois/Counter Mode）是一种结合加密与认证的对称加密算法，适用于高性能和高安全性场景。以下是其核心要点"
-publishDate: 2025-05-23
+pubDate: 2025-05-23
 tags: ["SM4-GCM","加密算法🔐"]
 ---
 

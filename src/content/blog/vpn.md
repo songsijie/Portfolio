@@ -1,7 +1,7 @@
 ---
 title: "vpn 推荐"
 description: "vpn 推荐"
-publishDate: 2024-10-10
+pubDate: 2024-10-10
 tags: ["vpn", "梯子", "科学上网"]
 ---
 

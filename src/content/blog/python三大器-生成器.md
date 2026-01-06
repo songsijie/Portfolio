@@ -1,7 +1,7 @@
 ---
 title: "Python三大器之生成器：高效的惰性求值利器"
 description: "深入讲解Python生成器的概念、特点、使用方式和应用场景，掌握yield关键字和生成器表达式的使用"
-publishDate: 2025-10-19
+pubDate: 2025-10-19
 tags: ["Python", "生成器", "编程基础", "性能优化"]
 ---
 

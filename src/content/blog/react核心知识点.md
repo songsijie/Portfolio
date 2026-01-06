@@ -1,7 +1,7 @@
 ---
 title: "React核心知识点：从基础到进阶的完全指南"
 description: "深入讲解React的核心概念、Hooks、性能优化、状态管理和工程化实践，掌握现代React开发的最佳实践"
-publishDate: 2025-10-31
+pubDate: 2025-10-31
 tags: ["React", "JavaScript", "前端框架", "Hooks", "性能优化"]
 ---
 
