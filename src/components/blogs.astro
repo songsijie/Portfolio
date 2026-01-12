@@ -12,7 +12,7 @@ try {
   
   if (blogPosts.length > 0) {
     sortedPosts = blogPosts.sort((a, b) => 
-      new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf()
+      new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf()
     );
     
     // 显示最新的6篇文章，而不是4篇
@@ -158,7 +158,7 @@ const imageErrorScript = `
                   </div>
                   <div class="p-4 flex-grow flex flex-col">
                     <p class="text-[var(--sec)] text-xs mb-1">
-                      {new Date(post.data.publishDate).toLocaleDateString("zh-CN", {
+                      {new Date(post.data.pubDate).toLocaleDateString("zh-CN", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",

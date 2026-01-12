@@ -1,7 +1,7 @@
 ---
 title: "彻底理解 asyncio：事件循环、Task、gather、线程池/进程池与常用模块全景"
 description: "用可运行的例子把 asyncio 的事件循环心智模型、并发与并行、gather/wait/TaskGroup、取消与超时、同步原语、队列、线程池/进程池、流与子进程等常用能力一次讲透"
-publishDate: 2025-12-29
+pubDate: 2025-12-29
 tags: ["Python", "asyncio", "异步编程", "事件循环", "并发", "线程池", "进程池"]
 ---
 

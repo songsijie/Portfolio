@@ -12,7 +12,7 @@ try {
   });
   
   blogPosts = blogPosts.sort((a, b) => 
-    new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf()
+    new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf()
   );
   
   // 在控制台输出所有文章数量，帮助调试
@@ -146,7 +146,7 @@ const imageErrorScript = `
                   </div>
                   <div class="p-6">
                     <p class="text-[var(--sec)] text-sm mb-2">
-                      {new Date(post.data.publishDate).toLocaleDateString("zh-CN", {
+                      {new Date(post.data.pubDate).toLocaleDateString("zh-CN", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
