@@ -1,13 +1,13 @@
 ---
 title: "面试问题：Redis 有哪些数据结构？"
-description: "详解 Redis 的五种基本数据结构和三种特殊数据结构，包括使用场景和常用命令"
+description: "详解 Redis 的五种基本数据结构、特殊数据结构，以及常见模块扩展（JSON、TimeSeries），包括使用场景和常用命令"
 pubDate: 2024-12-16
 tags: ["Redis", "数据库", "面试", "后端"]
 ---
 
 # Redis 有哪些数据结构？
 
-Redis 是一个基于内存的高性能键值数据库，支持多种数据结构。主要包括 **5 种基本数据结构** 和 **3 种特殊数据结构**。
+Redis 是一个基于内存的高性能键值数据库，支持多种数据结构。核心内置主要包括 **5 种基本数据结构**、**3 种特殊数据结构**，并在 **Redis 5.0+** 引入了 **Stream**。另外在 **Redis Stack / 模块（Modules）** 生态中，还常见 **RedisJSON（JSON）**、**RedisTimeSeries（TimeSeries）** 等“模块数据类型”（需要安装对应模块才支持）。
 
 ---
 
@@ -152,7 +152,7 @@ ZCOUNT key min max            # 统计分数范围内元素数量
 
 ---
 
-## 二、三种特殊数据结构
+## 二、特殊数据结构与模块扩展
 
 ### 1. HyperLogLog
 
@@ -217,6 +217,56 @@ GEOSEARCH key FROMMEMBER member BYRADIUS radius unit  # 范围搜索
 
 ---
 
+### 4. RedisJSON（JSON，模块扩展）
+
+**简介**：用于在 Redis 中原生存储/读取/局部更新 JSON 文档的数据类型（来自 **RedisJSON 模块**，常见于 **Redis Stack**），支持对嵌套字段进行路径级操作。
+
+**特点**：
+- 可对 JSON 的某个字段/数组元素进行局部读写（避免整段字符串反序列化/回写）
+- 更适合“结构化对象 + 局部更新”的场景
+- ⚠️ 需要安装模块；纯净 Redis 上会报 `unknown command 'JSON.*'`
+
+**常用命令**：
+```bash
+JSON.SET key $ '{"name":"alice","age":20}'   # 写入 JSON 文档
+JSON.GET key $                               # 读取 JSON 文档
+JSON.GET key $.name                          # 读取某个字段
+JSON.NUMINCRBY key $.age 1                   # 数值字段自增
+JSON.ARRAPPEND key $.tags '"redis"'          # 数组追加
+JSON.DEL key $.unused                        # 删除字段
+```
+
+**使用场景**：
+- 缓存复杂对象（用户画像、配置、商品详情），并需要**频繁局部更新**
+- 需要以 JSON 形态对外输出，但仍想保留字段级操作能力
+
+---
+
+### 5. RedisTimeSeries（TimeSeries，模块扩展）
+
+**简介**：面向“时间戳 + 数值”的高频写入与时间窗口查询的时序数据类型（来自 **RedisTimeSeries 模块**，常见于 **Redis Stack**），内置保留策略、聚合与降采样能力。
+
+**特点**：
+- 适合监控/指标类数据：高吞吐写入、按时间范围查询、按窗口聚合（avg/sum/min/max 等）
+- 支持 **Retention（保留期）** 自动淘汰旧数据、**Downsampling（降采样规则）** 自动生成分钟/小时级序列
+- 支持 **Labels（标签）** 做多维度过滤与聚合
+- ⚠️ 需要安装模块；纯净 Redis 上会报 `unknown command 'TS.*'`
+
+**常用命令**：
+```bash
+TS.CREATE cpu:host1 RETENTION 604800000 LABELS host host1 metric cpu   # 创建序列并设置保留期（毫秒）
+TS.ADD cpu:host1 * 0.32                                                # 写入点（* 为服务器时间戳）
+TS.RANGE cpu:host1 - + AGGREGATION avg 60000                           # 范围查询并按 60s 求平均
+TS.MRANGE - + FILTER metric=cpu                                        # 多序列查询（按标签过滤）
+TS.CREATERULE cpu:host1 cpu:host1:1m AGGREGATION avg 60000             # 建降采样规则
+```
+
+**使用场景**：
+- 监控指标/可观测性（QPS、延迟、错误率、CPU/内存等）
+- IoT 传感器数据上报、业务实时看板曲线
+
+---
+
 ## 三、Redis 5.0+ 新增数据结构
 
 ### Stream（流）
@@ -253,6 +303,8 @@ XACK key group id             # 确认消息
 | Bitmap | 位操作 | 签到、在线状态 |
 | GEO | 地理位置 | 附近的人/商家 |
 | Stream | 消息流 | 消息队列 |
+| RedisJSON（模块） | JSON 文档存储、字段级操作 | 复杂对象缓存、局部更新 |
+| RedisTimeSeries（模块） | 时序写入、窗口聚合、降采样 | 监控指标、IoT、实时看板 |
 
 ---
 
@@ -262,7 +314,8 @@ XACK key group id             # 确认消息
 
 1. **先说五种基本类型**：String、Hash、List、Set、ZSet
 2. **再提三种特殊类型**：HyperLogLog、Bitmap、GEO
-3. **最后补充 Stream**（Redis 5.0+）
-4. **结合项目经验**：说明自己在项目中如何使用这些数据结构
+3. **补充 Stream**（Redis 5.0+）
+4. **加分：提模块扩展**（Redis Stack / Modules）：RedisJSON、RedisTimeSeries（强调“需要模块支持”）
+5. **结合项目经验**：说明自己在项目中如何使用这些数据结构
 
 > 💡 **加分项**：如果能说出底层实现（SDS、ziplist、skiplist 等），会给面试官留下更好的印象。

@@ -710,3 +710,258 @@ quick_report()
 
 如果你愿意，我也可以根据你目前项目的实际使用场景（比如：用 Redis 做会话、排行榜、分布式锁、缓存 DB 查询结果等），把上面的模板进一步改成**更贴合你业务的“可直接复制粘贴”版本**（包括 key 设计、TTL 策略、监控告警指标建议）。
 
+
+```python
+import time
+import redis
+from redis.exceptions import ResponseError
+
+# 练习用连接（本地默认 Redis：127.0.0.1:6379）
+r = redis.Redis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+
+def demo_string():
+    """String：最常用类型（计数器/TTL/简单缓存）。"""
+    # 特点：
+    # - 简单键值；读写快；支持原子自增/自减；可设置 TTL
+    # 适用场景：
+    # - 计数器（PV/点赞/库存扣减的简单计数）、分布式锁（SET NX EX）、缓存 JSON 字符串
+    key = "ds:string:counter"
+    r.delete(key)
+    # SET/GET：写入与读取（这里用字符串 "1"）
+    r.set(key, "1")
+    # INCR/INCRBY：原子自增（计数器常用）
+    r.incr(key)
+    r.incrby(key, 10)
+    print("String =", r.get(key))  # 12
+    # SETEX：写入并设置 TTL（秒）
+    r.setex("ds:string:ttl", 2, "hello")
+    print("String ttl =", r.ttl("ds:string:ttl"), "value =", r.get("ds:string:ttl"))
+
+def demo_hash():
+    """Hash：适合存“对象”的字段（可按 field 局部更新）。"""
+    # 特点：
+    # - 一个 key 下多个 field；可局部读写字段；减少整段 JSON 读写
+    # 适用场景：
+    # - 用户/商品信息、购物车（field=sku，value=数量）、对象缓存的字段级更新
+    key = "ds:hash:user:1"
+    r.delete(key)
+    # HSET mapping：一次写多个字段
+    r.hset(key, mapping={"name": "alice", "age": "20"})
+    # HINCRBY：对某个字段做原子自增（字段值应是整数）
+    r.hincrby(key, "age", 1)
+    print("Hash fields =", r.hgetall(key))
+    print("Hash age =", r.hget(key, "age"))
+
+def demo_list():
+    """List：双端队列（队列/栈/简单消息队列）。"""
+    # 特点：
+    # - 有序可重复；支持左右两端 push/pop；支持阻塞弹出（BLPOP/BRPOP）
+    # 适用场景：
+    # - 简单队列/任务列表、时间线/最新列表（LPUSH+LTRIM）、栈结构
+    key = "ds:list:queue"
+    r.delete(key)
+    # RPUSH：从右侧入队；LPOP/RPOP：两端出队
+    r.rpush(key, "job1", "job2", "job3")
+    print("List len =", r.llen(key), "range =", r.lrange(key, 0, -1))
+    print("List lpop =", r.lpop(key))
+    print("List rpop =", r.rpop(key))
+
+    # 阻塞弹出（timeout=1 秒）
+    r.delete(key)
+    # BLPOP：队列为空会阻塞等待（常用于消费者）
+    print("List blpop (empty) =", r.blpop(key, timeout=1))
+
+def demo_set():
+    """Set：无序去重集合（标签/共同关注/去重）。"""
+    # 特点：
+    # - 无序；元素唯一；支持集合运算（交并差）
+    # 适用场景：
+    # - 标签系统、共同好友/共同关注（交集）、抽奖去重、点赞/收藏去重
+    key = "ds:set:tags"
+    r.delete(key)
+    # SADD：自动去重；SMEMBERS：取全集合
+    r.sadd(key, "redis", "python", "backend", "redis")  # 自动去重
+    print("Set members =", sorted(r.smembers(key)))
+    # SISMEMBER：判断是否存在
+    print("Set ismember(redis) =", r.sismember(key, "redis"))
+    r.srem(key, "backend")
+    print("Set count =", r.scard(key))
+
+def demo_zset():
+    """ZSet：带分数的有序集合（排行榜/延迟队列）。"""
+    # 特点：
+    # - member 唯一 + score 排序；可按 rank 或 score 范围查询；支持增分
+    # 适用场景：
+    # - 排行榜、热度榜、延迟队列（score=执行时间戳）、带权重的优先级队列
+    key = "ds:zset:rank"
+    r.delete(key)
+    # ZADD：member->score；ZINCRBY：增分
+    r.zadd(key, {"alice": 100, "bob": 80, "cindy": 120})
+    r.zincrby(key, 30, "bob")
+    # ZREVRANGE：按 score 从大到小取；withscores=True 返回分数
+    print("ZSet top(desc) =", r.zrevrange(key, 0, -1, withscores=True))
+    print("ZSet bob score =", r.zscore(key, "bob"))
+    # ZREVRANK：从高到低的名次（0 开始）
+    print("ZSet bob rank(desc) =", r.zrevrank(key, "bob"))
+
+def demo_hyperloglog():
+    """HyperLogLog：近似去重计数（UV/DAU），省内存但非精确。"""
+    # 特点：
+    # - 概率型基数统计；固定小内存；只给“数量估算”，拿不到明细元素
+    # 适用场景：
+    # - UV/DAU、独立 IP 统计、去重计数但不要求完全精确的指标
+    key = "ds:hll:uv"
+    r.delete(key)
+    # PFADD：添加元素；PFCOUNT：估算基数
+    r.pfadd(key, "u1", "u2", "u3", "u2")
+    print("HLL pfcount =", r.pfcount(key))  # 近似去重计数
+
+def demo_bitmap():
+    """Bitmap：基于 String 的位操作（签到/在线状态/布隆底层）。"""
+    # 特点：
+    # - 用 bit 表示 0/1 状态；极省内存；适合大量布尔标记
+    # 适用场景：
+    # - 签到/连续签到、在线/离线状态、活跃标记；（布隆过滤器底层也常用位图）
+    key = "ds:bitmap:signin:2026"
+    r.delete(key)
+    # 模拟：第 1、3、10 天签到
+    r.setbit(key, 0, 1)   # day1 -> offset 0
+    r.setbit(key, 2, 1)   # day3 -> offset 2
+    r.setbit(key, 9, 1)   # day10 -> offset 9
+    # GETBIT：读某一天；BITCOUNT：统计为 1 的位数（签到次数）
+    print("Bitmap day3 =", r.getbit(key, 2))
+    print("Bitmap total signed =", r.bitcount(key))
+
+def demo_geo():
+    """GEO：地理位置（附近的人/店铺），底层是 ZSet。"""
+    # 特点：
+    # - 经纬度存储；范围搜索/距离计算；底层基于 ZSet（geohash + score）
+    # 适用场景：
+    # - 附近的人/店铺、同城配送/外卖选店、打车找附近司机
+    key = "ds:geo:shops"
+    r.delete(key)
+    # GEOADD key longitude latitude member
+    r.geoadd(key, {"shop_a": (116.397128, 39.916527), "shop_b": (116.384, 39.925), "shop_c": (116.410, 39.920)})
+    # Redis 6.2+ 推荐 GEOSEARCH
+    # radius=2, unit="km"：2 公里范围内，并返回距离
+    res = r.geosearch(key, longitude=116.397, latitude=39.917, radius=2, unit="km", withdist=True)
+    print("GEO within 2km =", res)
+    print("GEO dist a-b(m) =", r.geodist(key, "shop_a", "shop_b", unit="m"))
+
+def demo_stream():
+    """Stream：消息流（更适合 MQ 场景，支持消费者组）。"""
+    # 特点：
+    # - 追加式消息日志；支持消费者组、ack、pending；可回溯消费
+    # 适用场景：
+    # - 异步任务/事件驱动、削峰填谷、订单事件流；比 List 队列更适合“可靠消费”
+    key = "ds:stream:orders"
+    group = "g1"
+    consumer = "c1"
+    r.delete(key)
+    # 生产消息
+    # XADD：追加消息；返回 message id
+    id1 = r.xadd(key, {"order_id": "1001", "amount": "19.9"})
+    id2 = r.xadd(key, {"order_id": "1002", "amount": "29.9"})
+    print("Stream xadd ids =", id1, id2)
+
+    # 创建消费者组（从头开始读：id="0"；从最新开始：id="$"）
+    try:
+        # mkstream=True：key 不存在也会创建 stream
+        r.xgroup_create(key, group, id="0", mkstream=True)
+    except ResponseError as e:
+        if "BUSYGROUP" not in str(e):
+            raise
+
+    # 消费者组读取（> 表示只取未投递的新消息）
+    # block=1000：最多阻塞 1s 等新消息
+    msgs = r.xreadgroup(group, consumer, streams={key: ">"}, count=10, block=1000)
+    print("Stream xreadgroup =", msgs)
+
+    # ack 已消费消息
+    for stream_name, entries in msgs:
+        for msg_id, fields in entries:
+            # XACK：确认消费（避免一直堆积在 pending）
+            r.xack(key, group, msg_id)
+    # XPENDING：查看待确认消息统计（这里应接近空）
+    print("Stream pending(after ack) =", r.xpending(key, group))
+
+def demo_json_optional():
+    """
+    JSON 不是 Redis 核心内置数据结构；它来自 RedisJSON 模块（常见于 Redis Stack）。
+    如果你的 Redis 没装模块，这段会报错，属于正常现象。
+    """
+    # 特点：
+    # - 原生 JSON 文档存储；支持路径级读写/局部更新；避免整段序列化回写
+    # 适用场景：
+    # - 复杂对象缓存（用户画像/配置/商品详情）且需要频繁局部更新字段
+    key = "ds:json:doc"
+    try:
+        # RedisJSON 命令：JSON.SET / JSON.GET
+        r.execute_command("JSON.SET", key, "$", '{"name":"alice","skills":["redis","python"],"age":20}')
+        doc = r.execute_command("JSON.GET", key, "$")
+        print("JSON doc =", doc)
+        r.execute_command("JSON.NUMINCRBY", key, "$.age", 1)
+        print("JSON age(after incr) =", r.execute_command("JSON.GET", key, "$.age"))
+    except ResponseError as e:
+        print("JSON demo skipped:", str(e))
+
+def demo_timeseries_optional():
+    """
+    TimeSeries 不是 Redis 核心内置数据结构；它来自 RedisTimeSeries 模块（常见于 Redis Stack）。
+    如果你的 Redis 没装模块，这段会报错（unknown command 'TS.*'），属于正常现象。
+    """
+    # 特点：
+    # - 面向时间戳+数值点；高频写入；时间范围查询；窗口聚合与降采样；支持标签过滤
+    # 适用场景：
+    # - 监控指标/APM（QPS/延迟/错误率）、IoT 传感器数据、实时看板曲线
+    key = "ds:ts:cpu:host1"
+    try:
+        # 创建时序：保留 1 小时（单位毫秒），并打上标签便于过滤/聚合
+        # 注意：如果 key 已存在，TS.CREATE 会报错；这里用 DELETE 重置练习环境
+        r.delete(key)
+        r.execute_command(
+            "TS.CREATE",
+            key,
+            "RETENTION",
+            60 * 60 * 1000,
+            "LABELS",
+            "host",
+            "host1",
+            "metric",
+            "cpu",
+        )
+
+        # 写入一些点：用服务器时间戳（*），value 用浮点数
+        for v in (0.12, 0.18, 0.33, 0.27):
+            r.execute_command("TS.ADD", key, "*", v)
+            time.sleep(0.05)
+
+        # 读取全量范围（- 到 +），并做窗口聚合：按 1 秒求 avg
+        points = r.execute_command("TS.RANGE", key, "-", "+")
+        print("TS range =", points)
+
+        points_avg = r.execute_command("TS.RANGE", key, "-", "+", "AGGREGATION", "avg", 1000)
+        print("TS range(avg/1s) =", points_avg)
+
+        # 多序列查询：按标签过滤（这里只有一个序列，也能演示写法）
+        mrange = r.execute_command("TS.MRANGE", "-", "+", "FILTER", "metric=cpu")
+        print("TS mrange(filter metric=cpu) =", mrange)
+    except ResponseError as e:
+        print("TimeSeries demo skipped:", str(e))
+
+if __name__ == "__main__":
+    # 小心：清空当前 db=0（只用于本地练习环境）
+    r.flushdb()
+
+    demo_string()
+    demo_hash()
+    demo_list()
+    demo_set()
+    demo_zset()
+    demo_hyperloglog()
+    demo_bitmap()
+    demo_geo()
+    demo_stream()
+    demo_json_optional()
+    demo_timeseries_optional()
+```
