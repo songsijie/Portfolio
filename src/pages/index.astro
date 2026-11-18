@@ -1,4 +1,5 @@
 ---
+import OriginalPageSwarm from "../features/swarm/OriginalPageSwarm.jsx";
 import Layout from "@/layouts/Layout.astro";
 import Nav from "@/components/nav.astro";
 import Home from "@/components/home.astro";
@@ -8,9 +9,11 @@ import Footer from "@/components/footer.astro";
 ---
 
 <Layout title="Oscar Hernandez">
+  <span data-swarm-arrivals hidden />
   <Nav />
   <Home />
   <Blogs />
   <Contact />
   <Footer />
+  <OriginalPageSwarm client:load />
 </Layout>

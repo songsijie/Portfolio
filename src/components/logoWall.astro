@@ -24,7 +24,7 @@ const technologies = [
 ];
 ---
 
-<div class="relative overflow-x-hidden py-8">
+<div data-logo-arrival class="relative overflow-x-hidden py-8">
   <div
     class="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[var(--background)] to-transparent z-20"
   >
@@ -34,10 +34,10 @@ const technologies = [
   >
   </div>
 
-  <div class={`flex hover:animate-paused gap-12 md:gap-20 w-max ${direction === 'right' ? 'animate-scroll-right' : 'animate-scroll-left'}`}>
+  <div data-logo-track class={`flex hover:animate-paused gap-12 md:gap-20 w-max ${direction === 'right' ? 'animate-scroll-right' : 'animate-scroll-left'}`}>
     {
       [...technologies, ...technologies, ...technologies].map((tech) => (
-        <div class="flex items-center gap-2 group transition-all duration-300">
+        <div data-logo-item class="flex items-center gap-2 group transition-all duration-300">
           <img
             src={`/svg/${tech}.svg`}
             alt={tech}
@@ -90,3 +90,47 @@ const technologies = [
     }
   }
 </style>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-logo-arrival]').forEach(wall => {
+    const track = wall.querySelector<HTMLElement>('[data-logo-track]')!;
+    const items = [...wall.querySelectorAll<HTMLElement>('[data-logo-item]')];
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    let animations: Animation[] = [], version = 0;
+    const finish = () => {
+      version++;
+      animations.forEach(animation => animation.cancel());
+      animations = [];
+      items.forEach(item => item.style.opacity = '');
+      track.style.animationPlayState = '';
+      observer.unobserve(wall);
+    };
+    const play = () => {
+      const current = ++version;
+      items.forEach((item, index) => {
+        item.style.opacity = '';
+        animations.push(item.animate([
+          {transform: 'scale(1.8)', filter: 'blur(10px)', opacity: 0},
+          {transform: 'scale(1)', filter: 'blur(0px)', opacity: 1}
+        ], {duration: 1250, delay: index % 7 * 70, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both'}));
+      });
+      Promise.all(animations.map(animation => animation.finished.catch(() => {}))).then(() => {
+        if(current === version) finish();
+      });
+    };
+    const observer = new IntersectionObserver(entries => {
+      if(entries.some(entry => entry.isIntersecting)) {observer.unobserve(wall);play();}
+    }, {threshold: .15});
+    const prepare = () => {
+      finish();
+      if(motion.matches) return;
+      track.style.animationPlayState = 'paused';
+      items.forEach(item => item.style.opacity = '0');
+      if(!document.querySelector('[data-swarm-arrivals]')) observer.observe(wall);
+    };
+    wall.addEventListener('portfolio-region-enter', play);
+    prepare();
+    window.addEventListener('portfolio-motion-replay', prepare);
+    window.addEventListener('portfolio-motion-skip', finish);
+    motion.addEventListener('change', () => {if(motion.matches) finish();});
+  });
+</script>

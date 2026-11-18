@@ -1,0 +1,17 @@
+/* 模块只设置自己的样式；全局页面布局由宿主或独立演示入口负责。 */
+.swarm-experience {
+  --paper: #f8f9fa;
+  --ink: #121417;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-family: Inter, system-ui, sans-serif;
+}
+.swarm-experience,
+.swarm-experience *,
+.swarm-experience *::before,
+.swarm-experience *::after {
+  box-sizing: border-box;
+}

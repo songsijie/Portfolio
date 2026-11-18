@@ -6,33 +6,28 @@ import SkillsList from "../React/SkillsList.tsx";
 
 <section class="text-[var(--white)] mt-12 md:mt-0" id="home">
   <div class="max-w-[100%] mx-auto space-y-8 md:py-36 pb-14">
-    <div class="text-left space-y-4">
-      <p class="text-md md:text-lg text-[var(--white-icon)] shiny-white">
-        Hi, I'm Dear song( 小小？笑笑！)
+    <div class="hero-intro">
+      <p class="hero-greeting">
+        <span lang="en">Hi, I'm Dear Song.</span>
+        <span lang="zh-CN">你好，小小？笑笑！</span>
       </p>
-      <div
-        class="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-8 md:gap-4"
-      >
-        <h1
-          class="text-[var(--white)] text-5xl md:text-6xl font-medium text-pretty leading-none"
-        >
-        medium <br /> Developer
+      <div class="hero-grid">
+        <h1 class="hero-title">
+          <span lang="en">Build things.<br />Stay curious.</span>
+          <span class="hero-tagline" lang="zh-CN">动手创造，保持好奇。</span>
         </h1>
-        <p class="text-md md:text-2xl text-[var(--white-icon)]">
-          Welcome to my personal website!
-          <br />
-          欢迎来到我的个人网站！
-          <br />
-          i am a full-stack developer, focusing on
-          <span class="text-[var(--sec)] shiny-sec">backend</span> but not very good
-          at writing frontend styles(css).learning continuously. Please give me more
-          advice!
-          <br />
-          我是一名全栈开发者，专注于
-          <span class="text-[var(--sec)] shiny-sec">后端</span> 但不是很会写前端样式(css)
-          持续学习中。还请多多指教！
-          <br />
-        </p>
+        <div class="hero-description">
+          <p class="hero-copy-zh" lang="zh-CN">
+            <span class="hero-role">一名<span class="text-[var(--sec)] shiny-sec">后端出身</span>的全栈开发者。</span>
+            喜欢拆解问题、动手实现，也在不断探索代码之外的可能。
+            这里记录我的技术笔记、开发实践，以及一些正在成形的想法。
+          </p>
+          <p class="hero-copy-en" lang="en">
+            <span class="hero-role">A full-stack developer with roots in backend engineering.</span>
+            I enjoy breaking down problems, bringing ideas to life, and exploring possibilities beyond code.
+            This is where I share technical notes, hands-on work, and ideas taking shape.
+          </p>
+        </div>
       </div>
       <div class="flex justify-start gap-2 pt-3 md:pt-6">
         <a
@@ -96,5 +91,30 @@ import SkillsList from "../React/SkillsList.tsx";
     70% {
       background-position: 0% 50%;
     }
+  }
+</style>
+
+<style>
+  .hero-intro { padding-bottom: 20px; }
+  .hero-greeting { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 28px; font-size: 14px; line-height: 1.6; color: var(--white-icon); }
+  .hero-greeting span:first-child { color: var(--white); }
+  .hero-grid { display: grid; gap: 32px; }
+  .hero-title { margin: 0; font-size: clamp(36px, 5vw, 72px); font-weight: 500; line-height: 1.08; letter-spacing: -0.045em; }
+  .hero-tagline { display: block; margin-top: 20px; font-size: 16px; font-weight: 400; line-height: 1.6; letter-spacing: 0.1em; color: var(--white-icon); }
+  .hero-description { max-width: 600px; align-self: center; }
+  .hero-copy-zh { font-size: 17px; line-height: 1.9; color: var(--white-icon); text-wrap: pretty; }
+  .hero-role { display: block; margin-bottom: 10px; }
+  .hero-copy-zh .hero-role { color: var(--white); font-size: 19px; }
+  .hero-copy-en { margin-top: 22px; padding-top: 20px; border-top: 1px solid #ffffff14; color: var(--white-icon); font-size: 14px; line-height: 1.8; text-wrap: pretty; }
+  .hero-copy-en .hero-role { margin-bottom: 8px; }
+  @media (min-width: 1100px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 5vw, 100px); }
+    .hero-greeting { margin-bottom: 36px; }
+  }
+  @media (max-width: 480px) {
+    .hero-greeting { font-size: 12px; margin-bottom: 22px; }
+    .hero-copy-zh { font-size: 15px; }
+    .hero-copy-zh .hero-role { font-size: 17px; }
+    .hero-copy-en { font-size: 13px; }
   }
 </style>

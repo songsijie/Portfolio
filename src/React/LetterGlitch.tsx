@@ -26,6 +26,7 @@ const LetterGlitch = ({
   const grid = useRef({ columns: 0, rows: 0 });
   const context = useRef<CanvasRenderingContext2D | null>(null);
   const lastGlitchTime = useRef(Date.now());
+  const arrival = useRef<{start: number | null; done: boolean}>({start: null, done: false});
 
   const fontSize = 16;
   const charWidth = 10;
@@ -177,6 +178,9 @@ const LetterGlitch = ({
     const ctx = context.current;
     const { width, height } = canvasRef.current!.getBoundingClientRect();
     ctx.clearRect(0, 0, width, height);
+    if (!arrival.current.done && arrival.current.start === null) return;
+    const elapsed = arrival.current.start === null ? 2000 : performance.now() - arrival.current.start;
+    if (elapsed >= 1900) arrival.current.done = true;
     ctx.font = `${fontSize}px monospace`;
     ctx.textBaseline = "top";
 
@@ -184,7 +188,27 @@ const LetterGlitch = ({
       const x = (index % grid.current.columns) * charWidth;
       const y = Math.floor(index / grid.current.columns) * charHeight;
       ctx.fillStyle = letter.color;
-      ctx.fillText(letter.char, x, y);
+      if (arrival.current.done) {
+        ctx.fillText(letter.char, x, y);
+        return;
+      }
+      // Stable per-cell seeds keep each flight path consistent across frames.
+      const seed = Math.sin(index * 127.1 + 311.7) * 43758.5453;
+      const random = seed - Math.floor(seed);
+      const seedY = Math.sin(index * 269.5 + 183.3) * 43758.5453;
+      const randomY = seedY - Math.floor(seedY);
+      const delay = random * 550;
+      const progress = arrival.current.done ? 1 : Math.max(0, Math.min(1, (elapsed - delay) / 1100));
+      const remaining = Math.pow(1 - progress, 3);
+      const dx = (random < .5 ? -1 : 1) * (width * .35 + randomY * 100);
+      const dy = (randomY - .5) * (height + 100);
+      ctx.globalAlpha = Math.min(1, progress * 3);
+      ctx.save();
+      ctx.translate(x + remaining * dx, y + remaining * dy);
+      ctx.rotate(remaining * (random - .5) * .7);
+      ctx.fillText(letter.char, 0, 0);
+      ctx.restore();
+      ctx.globalAlpha = 1;
     });
   };
 
@@ -236,6 +260,11 @@ const LetterGlitch = ({
 
   const animate = () => {
     const now = Date.now();
+    if (!arrival.current.done) {
+      drawLetters();
+      animationRef.current = requestAnimationFrame(animate);
+      return;
+    }
     if (now - lastGlitchTime.current >= glitchSpeed) {
       updateLetters();
       drawLetters();
@@ -254,8 +283,31 @@ const LetterGlitch = ({
     if (!canvas) return;
 
     context.current = canvas.getContext("2d");
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        arrival.current = {start: performance.now(), done: false};
+        observer.unobserve(canvas);
+      }
+    }, {threshold: .15});
+    const skip = () => {
+      observer.unobserve(canvas);
+      arrival.current = {start: null, done: true};
+      drawLetters();
+    };
+    const replay = () => {
+      arrival.current = {start: null, done: motion.matches};
+      if (!motion.matches && !document.querySelector('[data-swarm-arrivals]')) observer.observe(canvas);
+    };
+    const enter = () => {if(!motion.matches) arrival.current = {start: performance.now(), done: false};};
+    canvas.addEventListener('portfolio-region-enter', enter);
+    const preference = () => {if (motion.matches) skip();};
+    replay();
     resizeCanvas();
     animate();
+    window.addEventListener('portfolio-motion-replay', replay);
+    window.addEventListener('portfolio-motion-skip', skip);
+    motion.addEventListener('change', preference);
 
     let resizeTimeout: NodeJS.Timeout;
 
@@ -271,6 +323,12 @@ const LetterGlitch = ({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearTimeout(resizeTimeout);
+      observer.disconnect();
+      canvas.removeEventListener('portfolio-region-enter', enter);
+      window.removeEventListener('portfolio-motion-replay', replay);
+      window.removeEventListener('portfolio-motion-skip', skip);
+      motion.removeEventListener('change', preference);
       cancelAnimationFrame(animationRef.current!);
       window.removeEventListener("resize", handleResize);
     };

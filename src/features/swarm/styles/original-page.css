@@ -1,0 +1,6 @@
+.original-page-swarm {position:absolute;top:0;left:0;width:100%;pointer-events:none;overflow:clip;z-index:90;}
+.original-swarm-controls {position:fixed;bottom:18px;right:18px;z-index:110;display:flex;gap:6px;padding:6px;border:1px solid #ffffff20;border-radius:10px;background:#17131fe8;backdrop-filter:blur(12px);}
+.original-swarm-controls button {font:12px system-ui,sans-serif;color:#ddd0f7;background:transparent;border:0;border-radius:6px;padding:8px 10px;cursor:pointer;}
+.original-swarm-controls button:hover {background:#a476ff22;}
+.original-swarm-controls button:focus-visible {outline:2px solid #a476ff;outline-offset:2px;}
+@media(max-width:767px){.original-swarm-controls {bottom:78px;right:12px;}}
